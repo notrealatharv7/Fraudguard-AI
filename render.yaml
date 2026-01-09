@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: fraudguard-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PORT
+        value: 10000
+    plan: free
+
+  - type: web
+    name: fraudguard-explainer
+    env: python
+    buildCommand: pip install -r backend/explanation_service/requirements.txt
+    startCommand: python backend/explanation_service/main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+      - key: PORT
+        value: 10001
+    plan: free
+
+  - type: web
+    name: fraudguard-frontend
+    env: python
+    buildCommand: |
+      cd flutter_app/fraud_detector
+      flutter pub get
+      flutter build web --release --web-renderer html
+    startCommand: python server.py
+    envVars:
+      - key: PORT
+        value: 10002
+      - key: API_URL
+        value: https://fraudguard-backend.onrender.com
+      - key: EXPLAINER_URL
+        value: https://fraudguard-explainer.onrender.com
+    plan: free
